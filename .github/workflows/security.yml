@@ -1,5 +1,8 @@
-name: Security scan
+name: BreachLens scan
+
 on:
+  pull_request:
+    branches: [main]
   push:
     branches: [main]
   workflow_dispatch:
@@ -12,10 +15,80 @@ jobs:
   scan:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: fayezrajab84-hue/collaboration/.github/actions/breachlens-scan@claude/admiring-hertz
+      - name: Trigger BreachLens scan + wait + apply gate
+        env:
+          API_URL:       ${{ vars.BREACHLENS_API_URL }}
+          API_TOKEN:     ${{ secrets.BREACHLENS_API_TOKEN }}
+          SEVERITY_GATE: HIGH
+          TIMEOUT_MIN:   45
+        run: |
+          set -euo pipefail
+          PR=$(jq -r '.pull_request.number // empty' "$GITHUB_EVENT_PATH" 2>/dev/null || echo "")
+          GH_REF="${GITHUB_HEAD_REF:-$GITHUB_REF_NAME}"
+
+          BODY=$(jq -nc \
+            --arg full   "$GITHUB_REPOSITORY" \
+            --arg sha    "$GITHUB_SHA" \
+            --arg branch "$GH_REF" \
+            --arg pr     "$PR" \
+            '{githubFullName:$full, commitSha:$sha, branch:$branch}
+             + (if $pr != "" then {prNumber:($pr|tonumber)} else {} end)')
+          echo "POST $API_URL/api/scans/from-github"
+          RESPONSE=$(curl -fsS -X POST "$API_URL/api/scans/from-github" \
+            -H "Authorization: Bearer $API_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "$BODY")
+          SCAN_ID=$(echo "$RESPONSE" | jq -r '.scanJobId // .id')
+          [[ -z "$SCAN_ID" || "$SCAN_ID" == "null" ]] && {
+            echo "::error::Failed to extract scan ID: $RESPONSE"; exit 1; }
+          echo "Scan ID: $SCAN_ID"
+
+          STATUS=PENDING
+          DEADLINE=$(( $(date +%s) + (TIMEOUT_MIN * 60) ))
+          while [[ "$STATUS" != "COMPLETED" && "$STATUS" != "FAILED" ]]; do
+            (( $(date +%s) > DEADLINE )) && { echo "::error::scan timeout"; exit 1; }
+            sleep 15
+            STATUS=$(curl -fsS "$API_URL/api/scans/$SCAN_ID" \
+              -H "Authorization: Bearer $API_TOKEN" | jq -r '.status // "UNKNOWN"')
+            echo "[poll] $STATUS"
+          done
+          [[ "$STATUS" == "FAILED" ]] && { echo "::error::scan FAILED"; exit 1; }
+
+          curl -fsS "$API_URL/api/scans/$SCAN_ID/export.sarif" \
+            -H "Authorization: Bearer $API_TOKEN" -o breachlens.sarif
+          echo "SARIF: $(wc -c < breachlens.sarif) bytes"
+
+          C=$(jq '[.runs[].results[] | select(.properties.severity == "CRITICAL")] | length' breachlens.sarif)
+          H=$(jq '[.runs[].results[] | select(.properties.severity == "HIGH")]     | length' breachlens.sarif)
+          M=$(jq '[.runs[].results[] | select(.properties.severity == "MEDIUM")]   | length' breachlens.sarif)
+          L=$(jq '[.runs[].results[] | select(.properties.severity == "LOW")]      | length' breachlens.sarif)
+          I=$(jq '[.runs[].results[] | select(.properties.severity == "INFO")]     | length' breachlens.sarif)
+
+          {
+            echo "## BreachLens scan results"
+            echo "| Severity | Count |"
+            echo "|---|---|"
+            echo "| 🔴 Critical | $C |"
+            echo "| 🟠 High     | $H |"
+            echo "| 🟡 Medium   | $M |"
+            echo "| 🔵 Low      | $L |"
+            echo "| ⚪ Info     | $I |"
+            echo ""
+            echo "**Severity gate:** \`$SEVERITY_GATE\` · **Repo:** \`$GITHUB_REPOSITORY\` · **Scan:** \`$SCAN_ID\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          case "$SEVERITY_GATE" in
+            CRITICAL) (( C > 0 ))             && { echo "::error::$C CRITICAL"; exit 1; } || true ;;
+            HIGH)     (( C + H > 0 ))         && { echo "::error::$((C+H)) HIGH+"; exit 1; } || true ;;
+            MEDIUM)   (( C + H + M > 0 ))     && { echo "::error::$((C+H+M)) MEDIUM+"; exit 1; } || true ;;
+            LOW)      (( C + H + M + L > 0 )) && { echo "::error::$((C+H+M+L)) LOW+"; exit 1; } || true ;;
+            INFO)     (( C + H + M + L + I > 0 )) && { echo "::error::$((C+H+M+L+I)) total"; exit 1; } || true ;;
+            none)     echo "✓ Severity gate disabled" ;;
+          esac
+
+      - name: Upload SARIF to GitHub Code Scanning
+        if: always() && hashFiles('breachlens.sarif') != ''
+        uses: github/codeql-action/upload-sarif@v3
         with:
-          api-url:        ${{ vars.BREACHLENS_API_URL }}
-          api-token:      ${{ secrets.BREACHLENS_API_TOKEN }}
-          repo-id:        cmoh3qxnr00ki43p4nqix4zl4
-          severity-gate:  HIGH
+          sarif_file: breachlens.sarif
+          category:   breachlens
