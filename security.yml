@@ -14,7 +14,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: fayezrajab84-hue/collaboration/.github/actions/breachlens-scan@claude/admiring-hertz
         with:
           api-url:        ${{ vars.BREACHLENS_API_URL }}
           api-token:      ${{ secrets.BREACHLENS_API_TOKEN }}
