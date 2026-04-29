@@ -1,0 +1,18 @@
+{
+  "name": "breachlens-vulnerable-demo",
+  "version": "1.0.0",
+  "description": "Intentionally vulnerable dependency manifest for BreachLens scanning demo",
+  "private": true,
+  "dependencies": {
+    "lodash": "4.17.4",
+    "minimist": "1.2.0",
+    "serialize-javascript": "1.0.0",
+    "jsonwebtoken": "8.5.0",
+    "axios": "0.18.0",
+    "node-forge": "0.7.0",
+    "ws": "1.1.0",
+    "marked": "0.3.6",
+    "handlebars": "4.0.0",
+    "express": "4.16.0"
+  }
+}
