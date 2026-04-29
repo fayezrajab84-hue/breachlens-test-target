@@ -18,5 +18,4 @@ jobs:
         with:
           api-url:        ${{ vars.BREACHLENS_API_URL }}
           api-token:      ${{ secrets.BREACHLENS_API_TOKEN }}
-          repo-id:        cmoh3qxnr00ki43p4nqix4zl4
           severity-gate:  HIGH
