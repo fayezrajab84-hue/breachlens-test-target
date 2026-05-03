@@ -29,7 +29,8 @@ DATADOG_APP_KEY = "3e8b7c2a9d6f1b5e4c8a3d7f2b9e1c6a4d8f3b7e"
 DISCORD_BOT_TOKEN = "MTAwODg5OTk5OTk5OTk5OTk5OQ.GxXYzA.aBcDeFgHiJkLmNoPqRsTuVwXyZ"
 
 # npm publish token (npm_<36 chars>)
-NPM_TOKEN = "npm_8NkR2LpQ7XwM4FvYhT3BdGc6jZ9PaSeVuKnH"
+import os
+NPM_TOKEN = os.environ.get('NPM_TOKEN')
 
 # Hugging Face token (hf_<37 chars>)
 HUGGINGFACE_TOKEN = "hf_xQwertyUiopAsdfGhjKlZxcvBnm123456789Abc"
