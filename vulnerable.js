@@ -1,3 +1,4 @@
+// PR-Check-Runs validation @ 2026-05-03T18:46:46.110Z
 // Intentionally vulnerable file for BreachLens demo
 // DO NOT MERGE — this exists to trigger security scanners.
 
