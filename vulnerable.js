@@ -50,7 +50,7 @@ function hashPassword(pw) {
 // ───────────────────────────────────────────────────────────────
 
 function processRequest(req, res) {
-  const data = eval('(' + req.body.payload + ')');
+  const data = JSON.parse(req.body.payload);
   res.json(data);
 }
 
