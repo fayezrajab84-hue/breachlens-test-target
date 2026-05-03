@@ -90,7 +90,7 @@ def get_user():
     conn = sqlite3.connect("app.db")
     cursor = conn.cursor()
     # f-string in raw SQL → SQLi
-    cursor.execute(f"SELECT * FROM users WHERE id = {user_id}")
+    cursor.execute("SELECT * FROM users WHERE id = ?", (user_id,))
     return str(cursor.fetchone())
 
 # ───────────────────────────────────────────────────────────────
