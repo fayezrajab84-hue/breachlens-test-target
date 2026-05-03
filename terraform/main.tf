@@ -45,7 +45,7 @@ resource "aws_db_instance" "insecure_db" {
   instance_class          = "db.t3.micro"
   allocated_storage       = 20
   username                = "admin"
-  password                = "hunter2"
+  password                = random_password.db_password.result
   # CKV_AWS_16: RDS instance should have storage encryption enabled
   storage_encrypted       = false
   # CKV_AWS_17: RDS instance should NOT be publicly accessible
