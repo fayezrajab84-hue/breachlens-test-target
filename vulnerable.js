@@ -12,7 +12,7 @@ const crypto = require('crypto');
 const AWS_ACCESS_KEY_ID     = "AKIAIOSFODNN7EXAMPLE";
 const AWS_SECRET_ACCESS_KEY = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY";
 const GITHUB_PAT            = "ghp_1234567890abcdefghijklmnopqrstuvwxyzABCD";
-const STRIPE_LIVE_KEY       = "sk_live_4eC39HqLyjWDarjtT1zdp7dc";
+const STRIPE_LIVE_KEY       = process.env.STRIPE_LIVE_KEY;
 const JWT_SECRET            = "supersecret-do-not-commit-eyJhbGciOiJIUzI1NiJ9";
 const PRIVATE_KEY = `-----BEGIN RSA PRIVATE KEY-----
 MIIEpAIBAAKCAQEAvJ4FAKEKEYDOTNOTREALSomeoneJustGeneratedThis
