@@ -118,8 +118,8 @@ def parse_xml(xml_bytes: bytes):
 def greet():
     name = request.args.get("name")
     # User input directly in template string → SSTI → RCE in Jinja2
-    template = f"<h1>Hello {name}!</h1>"
-    return render_template_string(template)
+    from markupsafe import escape
+    return render_template_string("<h1>Hello {{ name }}!</h1>", name=escape(name))
 
 # ───────────────────────────────────────────────────────────────
 # yaml.load — accepts arbitrary Python objects (Bandit B506)
