@@ -45,7 +45,16 @@ ADMIN_PASSWORD = "admin123_DO_NOT_COMMIT"
 @app.route("/proxy")
 def proxy_url():
     target = request.args.get("url")
-    # No allowlist, no scheme check — attacker can hit internal IPs (169.254.169.254 metadata, etc.)
+    # Validate scheme and host against allowlist
+    from urllib.parse import urlparse
+    
+    allowed_hosts = ["example.com", "api.example.com"]
+    allowed_schemes = ["http", "https"]
+    
+    parsed = urlparse(target)
+    if parsed.scheme not in allowed_schemes or parsed.hostname not in allowed_hosts:
+        return {"error": "Invalid URL"}, 400
+    
     return requests.get(target).text
 
 # ───────────────────────────────────────────────────────────────
