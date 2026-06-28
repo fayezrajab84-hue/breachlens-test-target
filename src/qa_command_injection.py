@@ -1,4 +1,4 @@
-# BreachLens QA — verify multi-line suggestion anchor (v42 clean run).
+# BreachLens QA — multi-line suggestion anchor proof (v42).
 # Deliberate eval injection on line 11. Do not merge.
 import os
 
