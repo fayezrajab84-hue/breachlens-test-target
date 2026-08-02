@@ -9,7 +9,7 @@
   "dependencies": {
     "lodash": "4.17.20",
     "axios": "0.21.0",
-    "minimist": "1.2.5",
+    "minimist": "1.2.6, 0.2.4",
     "node-fetch": "2.6.6",
     "semver": "5.7.1",
     "express": "4.16.0",
