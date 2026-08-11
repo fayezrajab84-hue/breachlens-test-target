@@ -64,7 +64,9 @@ def proxy_url():
 @app.route("/file")
 def read_file():
     name = request.args.get("name")
-    # Attacker can pass ../../etc/passwd
+    # Validate that the name does not contain path traversal sequences
+    if '/' in name or '\\' in name or '..' in name:
+        return "Invalid filename", 400
     with open(f"/var/data/{name}", "r") as f:
         return f.read()
 
